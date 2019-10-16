@@ -57,7 +57,9 @@ public class Crawler implements Runnable {
                 proceedUrl(nextUrl);
             }
         }
-        changeState(FINISHED);
+        if(!STOPPED.equals(currentState)){
+            changeState(FINISHED);
+        }
     }
 
     public void pause() {

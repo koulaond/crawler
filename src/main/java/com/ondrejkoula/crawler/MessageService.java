@@ -2,16 +2,10 @@ package com.ondrejkoula.crawler;
 
 import java.util.UUID;
 
-public class MessageService {
-    public void crawlerError(UUID crawlerUuid, String message) {
-        // TODO
-    }
+public interface MessageService {
+    void crawlerError(UUID crawlerUuid, String message);
 
-    public void crawlerError(UUID crawlerUuid, String message, Throwable throwable) {
-        // TODO
-    }
+    void crawlerError(UUID crawlerUuid, String message, Throwable throwable);
 
-    public void crawlerWarning(UUID crawlerUuid, String message) {
-        // TODO
-    }
+    void crawlerWarning(UUID crawlerUuid, String message);
 }

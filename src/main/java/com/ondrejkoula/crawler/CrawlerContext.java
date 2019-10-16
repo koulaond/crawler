@@ -16,11 +16,11 @@ public class CrawlerContext {
 
     private UuidProvider uuidProvider;
 
-    private CrawlerContext() {
+    private CrawlerContext(UuidProvider uuidProvider, MessageService messageService) {
         this.registeredCrawlers = new ConcurrentHashMap<>();
         this.eventHandler = new CrawlerEventHandler();
-        this.uuidProvider = () -> UUID.randomUUID();
-        this.messageService = new MessageService();
+        this.uuidProvider = uuidProvider;
+        this.messageService = messageService;
     }
 
     public void subscribeDataAcquired(UUID crawlerUuid, Consumer<DataAcquiredCrawlerEvent>... consumers) {
@@ -79,7 +79,7 @@ public class CrawlerContext {
     // TODO replace by Spring annotations
     public static CrawlerContext getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new CrawlerContext();
+            //INSTANCE = new CrawlerContext();
         }
         return INSTANCE;
     }

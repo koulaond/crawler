@@ -14,7 +14,7 @@ public class Test {
     public static void main(String[] args) throws MalformedURLException, InterruptedException {
         CrawlerContext crawlerContext = CrawlerContext.getInstance();
         UUID crawlerUuid = crawlerContext.registerNewCrawler(CrawlerConfig.builder()
-                .initUrl(new URL("https://virtii.com/"))
+                .initUrl(new URL("https://www.memsource.com/"))
                 .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")
                 .excludedTypes(binaries())
                 .excludedTypes(audioTypes())
@@ -45,11 +45,11 @@ public class Test {
                                 event.getNewState())));
 
         crawlerContext.startCrawler(crawlerUuid);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         crawlerContext.pauseCrawler(crawlerUuid);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         crawlerContext.resumeCrawler(crawlerUuid);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         crawlerContext.stopCrawler(crawlerUuid);
         Thread.sleep(1000);
     }
