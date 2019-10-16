@@ -12,13 +12,15 @@ public class CrawlerContext {
 
     private final CrawlerEventHandler eventHandler;
 
-    private ErrorService errorService;
+    private MessageService messageService;
 
     private UuidProvider uuidProvider;
 
     private CrawlerContext() {
         this.registeredCrawlers = new ConcurrentHashMap<>();
         this.eventHandler = new CrawlerEventHandler();
+        this.uuidProvider = () -> UUID.randomUUID();
+        this.messageService = new MessageService();
     }
 
     public void subscribeDataAcquired(UUID crawlerUuid, Consumer<DataAcquiredCrawlerEvent>... consumers) {
@@ -44,9 +46,34 @@ public class CrawlerContext {
 
     public UUID registerNewCrawler(CrawlerConfig config) {
         UUID uuid = uuidProvider.newUuid();
-        Crawler crawler = new Crawler(uuid, config, errorService, eventHandler);
+        Crawler crawler = new Crawler(uuid, config, messageService, eventHandler);
         registeredCrawlers.put(uuid, crawler);
         return uuid;
+    }
+
+    public void startCrawler(UUID crawlerUuid) {
+        doActionWithrawler(crawlerUuid, crawler -> {
+            new Thread(crawler).start();
+        });
+    }
+
+    public void pauseCrawler(UUID crawlerUuid) {
+        doActionWithrawler(crawlerUuid, crawler -> crawler.pause());
+    }
+
+    public void resumeCrawler(UUID crawlerUuid) {
+        doActionWithrawler(crawlerUuid, crawler -> crawler.resume());
+    }
+
+    public void stopCrawler(UUID crawlerUuid) {
+        doActionWithrawler(crawlerUuid, crawler -> crawler.stop());
+    }
+
+    private void doActionWithrawler(UUID crawlerUuid, Consumer<Crawler> crawlerConsumer) {
+        Crawler crawler = registeredCrawlers.get(crawlerUuid);
+        if (crawler != null) {
+            crawlerConsumer.accept(crawler);
+        }
     }
 
     // TODO replace by Spring annotations
