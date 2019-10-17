@@ -1,4 +1,4 @@
-package com.ondrejkoula.crawler;
+package com.ondrejkoula.crawler.messages;
 
 import java.util.UUID;
 

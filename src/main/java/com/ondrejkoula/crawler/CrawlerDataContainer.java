@@ -17,8 +17,13 @@ public class CrawlerDataContainer {
         this.failedUrls = new HashSet<>();
     }
 
-    public boolean addToQueueIfNotProcessed(CrawlerURL url) {
+    public CrawlerDataContainer(Set<CrawlerURL> urlsToSkip, Set<CrawlerURL> urlsToCrawl) {
+        this.urlsToCrawl = urlsToCrawl == null ? new LinkedList<>() : new LinkedList<>(urlsToCrawl);
+        this.crawledUrls = urlsToSkip == null ? new HashSet<>() : urlsToSkip;
+        this.failedUrls = new HashSet<>();
+    }
 
+    public boolean addToQueueIfNotProcessed(CrawlerURL url) {
         return !isDone(url) && !urlsToCrawl.contains(url) && urlsToCrawl.add(url);
     }
 

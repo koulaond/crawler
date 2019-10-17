@@ -2,6 +2,7 @@ package com.ondrejkoula;
 
 import com.ondrejkoula.crawler.CrawlerConfig;
 import com.ondrejkoula.crawler.CrawlerContext;
+import com.ondrejkoula.crawler.messages.LoggerMessageService;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,9 +13,9 @@ import static java.lang.String.format;
 
 public class Test {
     public static void main(String[] args) throws MalformedURLException, InterruptedException {
-        CrawlerContext crawlerContext = CrawlerContext.getInstance();
+        CrawlerContext crawlerContext = new CrawlerContext(() -> UUID.randomUUID(), new LoggerMessageService());
         UUID crawlerUuid = crawlerContext.registerNewCrawler(CrawlerConfig.builder()
-                .initUrl(new URL("https://www.memsource.com/"))
+                .initialUrl(new URL("https://www.memsource.com/"))
                 .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")
                 .excludedTypes(binaries())
                 .excludedTypes(audioTypes())

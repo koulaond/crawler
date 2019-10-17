@@ -1,5 +1,7 @@
 package com.ondrejkoula.crawler;
 
+import com.ondrejkoula.crawler.messages.MessageService;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +18,7 @@ public class CrawlerContext {
 
     private UuidProvider uuidProvider;
 
-    private CrawlerContext(UuidProvider uuidProvider, MessageService messageService) {
+    public CrawlerContext(UuidProvider uuidProvider, MessageService messageService) {
         this.registeredCrawlers = new ConcurrentHashMap<>();
         this.eventHandler = new CrawlerEventHandler();
         this.uuidProvider = uuidProvider;
@@ -52,35 +54,27 @@ public class CrawlerContext {
     }
 
     public void startCrawler(UUID crawlerUuid) {
-        doActionWithrawler(crawlerUuid, crawler -> {
+        doActionWithCrawler(crawlerUuid, crawler -> {
             new Thread(crawler).start();
         });
     }
 
     public void pauseCrawler(UUID crawlerUuid) {
-        doActionWithrawler(crawlerUuid, crawler -> crawler.pause());
+        doActionWithCrawler(crawlerUuid, crawler -> crawler.pause());
     }
 
     public void resumeCrawler(UUID crawlerUuid) {
-        doActionWithrawler(crawlerUuid, crawler -> crawler.resume());
+        doActionWithCrawler(crawlerUuid, crawler -> crawler.resume());
     }
 
     public void stopCrawler(UUID crawlerUuid) {
-        doActionWithrawler(crawlerUuid, crawler -> crawler.stop());
+        doActionWithCrawler(crawlerUuid, crawler -> crawler.stop());
     }
 
-    private void doActionWithrawler(UUID crawlerUuid, Consumer<Crawler> crawlerConsumer) {
+    private void doActionWithCrawler(UUID crawlerUuid, Consumer<Crawler> crawlerConsumer) {
         Crawler crawler = registeredCrawlers.get(crawlerUuid);
         if (crawler != null) {
             crawlerConsumer.accept(crawler);
         }
-    }
-
-    // TODO replace by Spring annotations
-    public static CrawlerContext getInstance() {
-        if (INSTANCE == null) {
-            //INSTANCE = new CrawlerContext();
-        }
-        return INSTANCE;
     }
 }

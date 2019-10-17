@@ -1,15 +1,18 @@
 package com.ondrejkoula.crawler;
 
+import com.ondrejkoula.crawler.messages.MessageService;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import static com.ondrejkoula.crawler.CrawlerState.*;
 import static java.lang.String.format;
@@ -27,16 +30,39 @@ public class Crawler implements Runnable {
     private final ReentrantLock lock;
 
     private CrawlerState currentState;
+    private String host;
 
     Crawler(UUID uuid, CrawlerConfig crawlerConfig, MessageService messageService, CrawlerEventHandler eventHandler) {
+        Set<URL> initialUrls = crawlerConfig.getInitialUrls() == null ? new HashSet<>() : crawlerConfig.getInitialUrls();
+        if (initialUrls.isEmpty()) {
+            throw new IllegalStateException("No initial URL specified.");
+        }
+        validateUrlsHosts(initialUrls);
         this.uuid = uuid;
         this.config = crawlerConfig;
         this.messageService = messageService;
         this.eventHandler = eventHandler;
-        this.dataContainer = new CrawlerDataContainer();
+        this.host = initialUrls.iterator().next().getHost();
+        Set<URL> urlsToSkip = crawlerConfig.getUrlsToSkip() == null ? new HashSet<>() : crawlerConfig.getUrlsToSkip();
+
+        this.dataContainer = new CrawlerDataContainer(
+                urlsToSkip
+                        .stream()
+                        .map(url -> new CrawlerURL(url))
+                        .collect(Collectors.toSet()),
+                initialUrls
+                        .stream()
+                        .map(url -> new CrawlerURL(url))
+                        .collect(toSet()));
         this.linksFilter = new LinksFilter();
         this.lock = new ReentrantLock();
         changeState(CrawlerState.NEW);
+    }
+
+    private void validateUrlsHosts(Set<URL> initialUrls) {
+        if (initialUrls.stream().map(url -> url.getHost()).collect(toSet()).size() > 1) {
+            throw new IllegalStateException("Distinct hosts in initial URLs.");
+        }
     }
 
     private void startCrawling() {
@@ -44,7 +70,8 @@ public class Crawler implements Runnable {
             messageService.crawlerWarning(uuid, "Crawler already started.");
         }
         changeState(RUNNING);
-        CrawlerURL initUrl = new CrawlerURL(config.getInitUrl());
+
+        CrawlerURL initUrl = dataContainer.nextUrl();
         if (!proceedUrl(initUrl)) {
             if (!STOPPED.equals(currentState)) {
                 changeState(FAILED);
@@ -57,7 +84,7 @@ public class Crawler implements Runnable {
                 proceedUrl(nextUrl);
             }
         }
-        if(!STOPPED.equals(currentState)){
+        if (!STOPPED.equals(currentState)) {
             changeState(FINISHED);
         }
     }
@@ -166,7 +193,7 @@ public class Crawler implements Runnable {
     }
 
     private boolean isOnDomain(CrawlerURL url) {
-        return Objects.equals(url.getUrl().getHost(), config.getInitUrl().getHost());
+        return Objects.equals(url.getUrl().getHost(), this.host);
     }
 
     @Override
