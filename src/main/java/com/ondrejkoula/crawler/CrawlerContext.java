@@ -1,5 +1,7 @@
 package com.ondrejkoula.crawler;
 
+import com.ondrejkoula.crawler.messages.MessageService;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,13 +14,15 @@ public class CrawlerContext {
 
     private final CrawlerEventHandler eventHandler;
 
-    private ErrorService errorService;
+    private MessageService messageService;
 
     private UuidProvider uuidProvider;
 
-    private CrawlerContext() {
+    public CrawlerContext(UuidProvider uuidProvider, MessageService messageService) {
         this.registeredCrawlers = new ConcurrentHashMap<>();
         this.eventHandler = new CrawlerEventHandler();
+        this.uuidProvider = uuidProvider;
+        this.messageService = messageService;
     }
 
     public void subscribeDataAcquired(UUID crawlerUuid, Consumer<DataAcquiredCrawlerEvent>... consumers) {
@@ -44,16 +48,33 @@ public class CrawlerContext {
 
     public UUID registerNewCrawler(CrawlerConfig config) {
         UUID uuid = uuidProvider.newUuid();
-        Crawler crawler = new Crawler(uuid, config, errorService, eventHandler);
+        Crawler crawler = new Crawler(uuid, config, messageService, eventHandler);
         registeredCrawlers.put(uuid, crawler);
         return uuid;
     }
 
-    // TODO replace by Spring annotations
-    public static CrawlerContext getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new CrawlerContext();
+    public void startCrawler(UUID crawlerUuid) {
+        doActionWithCrawler(crawlerUuid, crawler -> {
+            new Thread(crawler).start();
+        });
+    }
+
+    public void pauseCrawler(UUID crawlerUuid) {
+        doActionWithCrawler(crawlerUuid, crawler -> crawler.pause());
+    }
+
+    public void resumeCrawler(UUID crawlerUuid) {
+        doActionWithCrawler(crawlerUuid, crawler -> crawler.resume());
+    }
+
+    public void stopCrawler(UUID crawlerUuid) {
+        doActionWithCrawler(crawlerUuid, crawler -> crawler.stop());
+    }
+
+    private void doActionWithCrawler(UUID crawlerUuid, Consumer<Crawler> crawlerConsumer) {
+        Crawler crawler = registeredCrawlers.get(crawlerUuid);
+        if (crawler != null) {
+            crawlerConsumer.accept(crawler);
         }
-        return INSTANCE;
     }
 }

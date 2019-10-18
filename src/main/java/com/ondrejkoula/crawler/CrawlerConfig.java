@@ -11,10 +11,13 @@ import java.util.Set;
 @Builder
 public class CrawlerConfig {
 
-    private URL initUrl;
-
     @Singular
     private Set<SupportedType> excludedTypes;
+
+    private Set<URL> urlsToSkip;
+
+    @Singular
+    private Set<URL> initialUrls;
 
     private String userAgent;
 }
