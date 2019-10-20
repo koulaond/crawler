@@ -12,16 +12,14 @@ import static java.util.Optional.ofNullable;
 
 public final class CrawlerEventHandler {
 
-    private final Map<UUID, Set<Consumer<DataAcquiredCrawlerEvent>>> dataAcquiredEvents;
-    private final Map<UUID, Set<Consumer<LinksExtractedCrawlerEvent>>> linksExtractedEvents;
-    private final Map<UUID, Set<Consumer<StateChangedCrawlerEvent>>> stateChangedEvents;
+    private final Map<UUID, Set<Consumer<PageDataAcquiredCrawlerEvent>>> dataAcquiredConsumers;
+    private final Map<UUID, Set<Consumer<StateChangedCrawlerEvent>>> stateChangedConsumers;
 
     private final ReentrantLock lock;
 
     public CrawlerEventHandler() {
-        this.dataAcquiredEvents = new ConcurrentHashMap<>();
-        this.linksExtractedEvents = new ConcurrentHashMap<>();
-        this.stateChangedEvents = new ConcurrentHashMap<>();
+        this.dataAcquiredConsumers = new ConcurrentHashMap<>();
+        this.stateChangedConsumers = new ConcurrentHashMap<>();
         this.lock = new ReentrantLock();
     }
 
@@ -29,14 +27,11 @@ public final class CrawlerEventHandler {
         UUID crawlerUuid = event.getCrawlerUuid();
         lock.lock();
         try {
-            if (event instanceof DataAcquiredCrawlerEvent) {
-                ofNullable(dataAcquiredEvents.get(crawlerUuid))
-                        .ifPresent(consumers -> consumers.forEach(consumer -> consumer.accept((DataAcquiredCrawlerEvent) event)));
-            } else if (event instanceof LinksExtractedCrawlerEvent) {
-                ofNullable(linksExtractedEvents.get(crawlerUuid))
-                        .ifPresent(consumers -> consumers.forEach(consumer -> consumer.accept((LinksExtractedCrawlerEvent) event)));
+            if (event instanceof PageDataAcquiredCrawlerEvent) {
+                ofNullable(dataAcquiredConsumers.get(crawlerUuid))
+                        .ifPresent(consumers -> consumers.forEach(consumer -> consumer.accept((PageDataAcquiredCrawlerEvent) event)));
             } else if (event instanceof StateChangedCrawlerEvent) {
-                ofNullable(stateChangedEvents.get(crawlerUuid))
+                ofNullable(stateChangedConsumers.get(crawlerUuid))
                         .ifPresent(consumers -> consumers.forEach(consumer -> consumer.accept((StateChangedCrawlerEvent) event)));
             } else
                 throw new IllegalArgumentException(String.format("Unsupported event type: %s", event.getClass().getName()));
@@ -46,15 +41,11 @@ public final class CrawlerEventHandler {
 
     }
 
-    void subscribeDataAcquired(UUID crawlerUuid, Consumer<DataAcquiredCrawlerEvent> consumer) {
-        dataAcquiredEvents.computeIfAbsent(crawlerUuid, o -> new HashSet<>()).add(consumer);
-    }
-
-    void subscribeLinksExtracted(UUID crawlerUuid, Consumer<LinksExtractedCrawlerEvent> consumer) {
-        linksExtractedEvents.computeIfAbsent(crawlerUuid, o -> new HashSet<>()).add(consumer);
+    void subscribePageDataAcquired(UUID crawlerUuid, Consumer<PageDataAcquiredCrawlerEvent> consumer) {
+        dataAcquiredConsumers.computeIfAbsent(crawlerUuid, o -> new HashSet<>()).add(consumer);
     }
 
     void subscribeStateChanged(UUID crawlerUuid, Consumer<StateChangedCrawlerEvent> consumer) {
-        stateChangedEvents.computeIfAbsent(crawlerUuid, o -> new HashSet<>()).add(consumer);
+        stateChangedConsumers.computeIfAbsent(crawlerUuid, o -> new HashSet<>()).add(consumer);
     }
 }

@@ -137,11 +137,10 @@ public class Crawler implements Runnable {
     private Set<String> processLinks(CrawlerURL url, Document htmlDocument) {
         try {
             lock.lock();
-            proceedHtml(htmlDocument, url);
             dataContainer.markAsCrawled(url);
             Elements outcomeLinks = htmlDocument.select("a[href]");
             Set<String> filteredLinks = linksFilter.filterLinks(outcomeLinks, config.getExcludedTypes());
-            notifyLinksAcquired(filteredLinks, url);
+            notifyDataAcquired(htmlDocument, filteredLinks, url);
             return filteredLinks;
         } finally {
             lock.unlock();
@@ -164,7 +163,7 @@ public class Crawler implements Runnable {
         }
     }
 
-    private void notifyLinksAcquired(Set<String> extractedLinks, CrawlerURL url) {
+    private void notifyDataAcquired(Document document, Set<String> extractedLinks, CrawlerURL crawlerURL) {
         Set<URL> urls = extractedLinks.stream()
                 .map(link -> {
                     try {
@@ -176,15 +175,13 @@ public class Crawler implements Runnable {
                 })
                 .filter(Objects::nonNull)
                 .collect(toSet());
-        LinksExtractedCrawlerEvent event = new LinksExtractedCrawlerEvent(uuid, url.getUrl(), urls);
+        Set<URL> urlsOutOfDomain = urls.stream().filter(url -> !url.getHost().equals(this.host)).collect(toSet());
+        Set<URL> urlsOnDomain = urls.stream().filter(url -> url.getHost().equals(this.host)).collect(toSet());
+        PageDataAcquiredCrawlerEvent event = new PageDataAcquiredCrawlerEvent(uuid, crawlerURL.getUrl(), document.title(), document.outerHtml(), urlsOutOfDomain, urlsOnDomain);
         eventHandler.notify(event);
     }
 
-    private void proceedHtml(Document htmlDocument, CrawlerURL location) {
-        DataAcquiredCrawlerEvent event
-                = new DataAcquiredCrawlerEvent(uuid, location.getUrl(), htmlDocument.title(), htmlDocument.outerHtml());
-        eventHandler.notify(event);
-    }
+
 
     private void changeState(CrawlerState newState) {
         CrawlerState oldState = currentState;

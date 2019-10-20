@@ -23,19 +23,13 @@ public class Test {
                 .excludedTypes(archives())
                 .build());
 
-        crawlerContext.subscribeDataAcquired(
+        crawlerContext.subscribePageDataAcquired(
                 crawlerUuid,
                 event -> System.out.println(
-                        format("Crawler with ID:%s acquired %s",
+                        format("Crawler with ID:%s extracted %s, title: %s",
                                 event.getCrawlerUuid(),
-                                event.getLocation())));
-
-        crawlerContext.subscribeLinksExtracted(
-                crawlerUuid,
-                event -> System.out.println(
-                        format("Crawler with ID:%s extracted %s",
-                                event.getCrawlerUuid(),
-                                event.getSource())));
+                                event.getLocation(),
+                                event.getDocumentTitle())));
 
         crawlerContext.subscribeStateChanged(
                 crawlerUuid,

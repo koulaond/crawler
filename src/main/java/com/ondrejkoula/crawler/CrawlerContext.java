@@ -25,17 +25,10 @@ public class CrawlerContext {
         this.messageService = messageService;
     }
 
-    public void subscribeDataAcquired(UUID crawlerUuid, Consumer<DataAcquiredCrawlerEvent>... consumers) {
+    public void subscribePageDataAcquired(UUID crawlerUuid, Consumer<PageDataAcquiredCrawlerEvent>... consumers) {
         if (registeredCrawlers.get(crawlerUuid) != null) {
-            for (Consumer<DataAcquiredCrawlerEvent> consumer : consumers)
-                this.eventHandler.subscribeDataAcquired(crawlerUuid, consumer);
-        }
-    }
-
-    public void subscribeLinksExtracted(UUID crawlerUuid, Consumer<LinksExtractedCrawlerEvent>... consumers) {
-        if (registeredCrawlers.get(crawlerUuid) != null) {
-            for (Consumer<LinksExtractedCrawlerEvent> consumer : consumers)
-                this.eventHandler.subscribeLinksExtracted(crawlerUuid, consumer);
+            for (Consumer<PageDataAcquiredCrawlerEvent> consumer : consumers)
+                this.eventHandler.subscribePageDataAcquired(crawlerUuid, consumer);
         }
     }
 
