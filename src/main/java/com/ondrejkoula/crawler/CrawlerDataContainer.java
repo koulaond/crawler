@@ -17,29 +17,29 @@ public class CrawlerDataContainer {
         this.failedUrls = new HashSet<>();
     }
 
-    public CrawlerDataContainer(Set<CrawlerURL> urlsToSkip, Set<CrawlerURL> urlsToCrawl) {
+    CrawlerDataContainer(Set<CrawlerURL> urlsToSkip, Set<CrawlerURL> urlsToCrawl) {
         this.urlsToCrawl = urlsToCrawl == null ? new LinkedList<>() : new LinkedList<>(urlsToCrawl);
         this.crawledUrls = urlsToSkip == null ? new HashSet<>() : urlsToSkip;
         this.failedUrls = new HashSet<>();
     }
 
-    public boolean addToQueueIfNotProcessed(CrawlerURL url) {
+    boolean addToQueueIfNotProcessed(CrawlerURL url) {
         return !isDone(url) && !urlsToCrawl.contains(url) && urlsToCrawl.add(url);
     }
 
-    public CrawlerURL nextUrl() {
+    CrawlerURL nextUrl() {
         return urlsToCrawl.poll();
     }
 
-    public boolean markAsCrawled(CrawlerURL url) {
+    boolean markAsCrawled(CrawlerURL url) {
         return crawledUrls.contains(url) || crawledUrls.add(url);
     }
 
-    public boolean markAsFailed(CrawlerURL url) {
+    boolean markAsFailed(CrawlerURL url) {
         return failedUrls.contains(url) || failedUrls.add(url);
     }
 
-    public boolean isDone(CrawlerURL url) {
+    boolean isDone(CrawlerURL url) {
         return crawledUrls.contains(url) || failedUrls.contains(url);
     }
 

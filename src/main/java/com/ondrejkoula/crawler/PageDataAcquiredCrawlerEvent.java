@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Getter
-public final class PageDataAcquiredCrawlerEvent extends CrawlerEvent{
+public final class PageDataAcquiredCrawlerEvent extends CrawlerEvent {
 
     private final URL location;
     private final String documentTitle;
@@ -15,12 +15,12 @@ public final class PageDataAcquiredCrawlerEvent extends CrawlerEvent{
     private final Set<URL> outcomeUrlsOutOfDomain;
     private final Set<URL> outcomeUrlsOnDomain;
 
-    public PageDataAcquiredCrawlerEvent(UUID crawlerUuid,
-                                        URL location,
-                                        String documentTitle,
-                                        String documentHtml,
-                                        Set<URL> outcomeUrlsOutOfDomain,
-                                        Set<URL> outcomeUrlsOnDomain) {
+    PageDataAcquiredCrawlerEvent(UUID crawlerUuid,
+                                 URL location,
+                                 String documentTitle,
+                                 String documentHtml,
+                                 Set<URL> outcomeUrlsOutOfDomain,
+                                 Set<URL> outcomeUrlsOnDomain) {
         super(crawlerUuid);
         this.location = location;
         this.documentTitle = documentTitle;

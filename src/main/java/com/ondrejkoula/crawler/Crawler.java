@@ -48,11 +48,11 @@ public class Crawler implements Runnable {
         this.dataContainer = new CrawlerDataContainer(
                 urlsToSkip
                         .stream()
-                        .map(url -> new CrawlerURL(url))
+                        .map(CrawlerURL::new)
                         .collect(Collectors.toSet()),
                 initialUrls
                         .stream()
-                        .map(url -> new CrawlerURL(url))
+                        .map(CrawlerURL::new)
                         .collect(toSet()));
         this.linksFilter = new LinksFilter();
         this.lock = new ReentrantLock();
@@ -60,7 +60,7 @@ public class Crawler implements Runnable {
     }
 
     private void validateUrlsHosts(Set<URL> initialUrls) {
-        if (initialUrls.stream().map(url -> url.getHost()).collect(toSet()).size() > 1) {
+        if (initialUrls.stream().map(URL::getHost).collect(toSet()).size() > 1) {
             throw new IllegalStateException("Distinct hosts in initial URLs.");
         }
     }
@@ -89,21 +89,21 @@ public class Crawler implements Runnable {
         }
     }
 
-    public void pause() {
+    void pause() {
         if (!STOPPED.equals(currentState)) {
             lock.lock();
             changeState(CrawlerState.PAUSED);
         }
     }
 
-    public void resume() {
+    void resume() {
         if (lock.isLocked() && !STOPPED.equals(currentState)) {
             changeState(RUNNING);
             lock.unlock();
         }
     }
 
-    public void stop() {
+    void stop() {
         if (RUNNING.equals(currentState) || PAUSED.equals(currentState)) {
             changeState(STOPPED);
         }
@@ -156,7 +156,7 @@ public class Crawler implements Runnable {
                     dataContainer.addToQueueIfNotProcessed(outcomeLink);
                 }
             } catch (MalformedURLException e) {
-                messageService.crawlerError(uuid, format("Invalid link: %s. Skipping...", link, e));
+                messageService.crawlerError(uuid, format("Invalid link: %s. Skipping...", link));
             } finally {
                 lock.unlock();
             }
@@ -180,7 +180,6 @@ public class Crawler implements Runnable {
         PageDataAcquiredCrawlerEvent event = new PageDataAcquiredCrawlerEvent(uuid, crawlerURL.getUrl(), document.title(), document.outerHtml(), urlsOutOfDomain, urlsOnDomain);
         eventHandler.notify(event);
     }
-
 
 
     private void changeState(CrawlerState newState) {

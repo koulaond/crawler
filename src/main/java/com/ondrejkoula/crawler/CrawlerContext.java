@@ -5,34 +5,37 @@ import com.ondrejkoula.crawler.messages.MessageService;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class CrawlerContext {
-    private static CrawlerContext INSTANCE;
 
     private final Map<UUID, Crawler> registeredCrawlers;
-
     private final CrawlerEventHandler eventHandler;
+    private final ExecutorService executorService;
 
     private MessageService messageService;
-
     private UuidProvider uuidProvider;
 
     public CrawlerContext(UuidProvider uuidProvider, MessageService messageService) {
-        this.registeredCrawlers = new ConcurrentHashMap<>();
-        this.eventHandler = new CrawlerEventHandler();
         this.uuidProvider = uuidProvider;
         this.messageService = messageService;
+        this.registeredCrawlers = new ConcurrentHashMap<>();
+        this.executorService = Executors.newCachedThreadPool();
+        this.eventHandler = new CrawlerEventHandler(executorService);
     }
 
-    public void subscribePageDataAcquired(UUID crawlerUuid, Consumer<PageDataAcquiredCrawlerEvent>... consumers) {
+    @SafeVarargs
+    public final void subscribePageDataAcquired(UUID crawlerUuid, Consumer<PageDataAcquiredCrawlerEvent>... consumers) {
         if (registeredCrawlers.get(crawlerUuid) != null) {
             for (Consumer<PageDataAcquiredCrawlerEvent> consumer : consumers)
                 this.eventHandler.subscribePageDataAcquired(crawlerUuid, consumer);
         }
     }
 
-    public void subscribeStateChanged(UUID crawlerUuid, Consumer<StateChangedCrawlerEvent>... consumers) {
+    @SafeVarargs
+    public final void subscribeStateChanged(UUID crawlerUuid, Consumer<StateChangedCrawlerEvent>... consumers) {
         if (registeredCrawlers.get(crawlerUuid) != null) {
             for (Consumer<StateChangedCrawlerEvent> consumer : consumers)
                 this.eventHandler.subscribeStateChanged(crawlerUuid, consumer);
@@ -47,21 +50,19 @@ public class CrawlerContext {
     }
 
     public void startCrawler(UUID crawlerUuid) {
-        doActionWithCrawler(crawlerUuid, crawler -> {
-            new Thread(crawler).start();
-        });
+        doActionWithCrawler(crawlerUuid, executorService::execute);
     }
 
     public void pauseCrawler(UUID crawlerUuid) {
-        doActionWithCrawler(crawlerUuid, crawler -> crawler.pause());
+        doActionWithCrawler(crawlerUuid, Crawler::pause);
     }
 
     public void resumeCrawler(UUID crawlerUuid) {
-        doActionWithCrawler(crawlerUuid, crawler -> crawler.resume());
+        doActionWithCrawler(crawlerUuid, Crawler::resume);
     }
 
     public void stopCrawler(UUID crawlerUuid) {
-        doActionWithCrawler(crawlerUuid, crawler -> crawler.stop());
+        doActionWithCrawler(crawlerUuid, Crawler::stop);
     }
 
     private void doActionWithCrawler(UUID crawlerUuid, Consumer<Crawler> crawlerConsumer) {
