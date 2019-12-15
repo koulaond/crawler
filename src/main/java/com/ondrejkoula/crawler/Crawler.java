@@ -1,6 +1,7 @@
 package com.ondrejkoula.crawler;
 
-import com.ondrejkoula.crawler.messages.MessageService;
+import com.ondrejkoula.crawler.messages.CrawlerMessageService;
+import lombok.Getter;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
@@ -20,19 +21,22 @@ import static java.util.stream.Collectors.toSet;
 import static org.jsoup.Jsoup.connect;
 
 public class Crawler implements Runnable {
-
+    @Getter
     private final UUID uuid;
+    @Getter
     private final CrawlerConfig config;
-    private final MessageService messageService;
+    private final CrawlerMessageService messageService;
     private final CrawlerDataContainer dataContainer;
     private final LinksFilter linksFilter;
     private final CrawlerEventHandler eventHandler;
     private final ReentrantLock lock;
 
+    @Getter
     private CrawlerState currentState;
+    @Getter
     private String host;
 
-    Crawler(UUID uuid, CrawlerConfig crawlerConfig, MessageService messageService, CrawlerEventHandler eventHandler) {
+    Crawler(UUID uuid, CrawlerConfig crawlerConfig, CrawlerMessageService messageService, CrawlerEventHandler eventHandler) {
         Set<URL> initialUrls = crawlerConfig.getInitialUrls() == null ? new HashSet<>() : crawlerConfig.getInitialUrls();
         if (initialUrls.isEmpty()) {
             throw new IllegalStateException("No initial URL specified.");

@@ -1,6 +1,6 @@
 package com.ondrejkoula.crawler;
 
-import com.ondrejkoula.crawler.messages.MessageService;
+import com.ondrejkoula.crawler.messages.CrawlerMessageService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -15,10 +15,10 @@ public class CrawlerContext {
     private final CrawlerEventHandler eventHandler;
     private final ExecutorService executorService;
 
-    private MessageService messageService;
+    private CrawlerMessageService messageService;
     private UuidProvider uuidProvider;
 
-    public CrawlerContext(UuidProvider uuidProvider, MessageService messageService) {
+    public CrawlerContext(UuidProvider uuidProvider, CrawlerMessageService messageService) {
         this.uuidProvider = uuidProvider;
         this.messageService = messageService;
         this.registeredCrawlers = new ConcurrentHashMap<>();
@@ -42,11 +42,15 @@ public class CrawlerContext {
         }
     }
 
-    public UUID registerNewCrawler(CrawlerConfig config) {
+    public CrawlerInfo registerNewCrawler(CrawlerConfig config) {
         UUID uuid = uuidProvider.newUuid();
         Crawler crawler = new Crawler(uuid, config, messageService, eventHandler);
         registeredCrawlers.put(uuid, crawler);
-        return uuid;
+        return CrawlerInfo.builder()
+                .uuid(crawler.getUuid())
+                .host(crawler.getHost())
+                .state(crawler.getCurrentState())
+                .build();
     }
 
     public void startCrawler(UUID crawlerUuid) {
