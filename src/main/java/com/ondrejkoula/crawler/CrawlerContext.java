@@ -53,6 +53,15 @@ public class CrawlerContext {
                 .build();
     }
 
+    public CrawlerInfo getCrawlerInfo(UUID uuid) {
+        Crawler crawler = registeredCrawlers.get(uuid);
+        if ( crawler == null) {
+            messageService.crawlerError(uuid, "No crawler exists with UUID: " + uuid);
+            return null;
+        }
+        return CrawlerInfo.builder().uuid(crawler.getUuid()).host(crawler.getHost()).state(crawler.getCurrentState()).build();
+    }
+
     public void startCrawler(UUID crawlerUuid) {
         doActionWithCrawler(crawlerUuid, executorService::execute);
     }
