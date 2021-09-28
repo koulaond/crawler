@@ -1,7 +1,5 @@
 package com.ondrejkoula.crawler;
 
-import com.ondrejkoula.crawler.messages.CrawlerMessageService;
-
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,12 +13,10 @@ public class CrawlerContext {
     private final CrawlerEventHandler eventHandler;
     private final ExecutorService executorService;
 
-    private CrawlerMessageService messageService;
-    private UuidProvider uuidProvider;
+    private final UuidProvider uuidProvider;
 
-    public CrawlerContext(UuidProvider uuidProvider, CrawlerMessageService messageService) {
+    public CrawlerContext(UuidProvider uuidProvider) {
         this.uuidProvider = uuidProvider;
-        this.messageService = messageService;
         this.registeredCrawlers = new ConcurrentHashMap<>();
         this.executorService = Executors.newCachedThreadPool();
         this.eventHandler = new CrawlerEventHandler(executorService);
@@ -44,7 +40,7 @@ public class CrawlerContext {
 
     public CrawlerInfo registerNewCrawler(CrawlerConfig config) {
         UUID uuid = uuidProvider.newUuid();
-        Crawler crawler = new Crawler(uuid, config, messageService, eventHandler);
+        Crawler crawler = new Crawler(uuid, config, eventHandler);
         registeredCrawlers.put(uuid, crawler);
         return CrawlerInfo.builder()
                 .uuid(crawler.getUuid())
@@ -56,7 +52,7 @@ public class CrawlerContext {
     public CrawlerInfo getCrawlerInfo(UUID uuid) {
         Crawler crawler = registeredCrawlers.get(uuid);
         if ( crawler == null) {
-            messageService.crawlerError(uuid, "No crawler exists with UUID: " + uuid);
+            // TODO log "No crawler exists with UUID: "
             return null;
         }
         return CrawlerInfo.builder().uuid(crawler.getUuid()).host(crawler.getHost()).state(crawler.getCurrentState()).build();

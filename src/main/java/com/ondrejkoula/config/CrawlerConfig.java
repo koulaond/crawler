@@ -17,8 +17,8 @@ public abstract class CrawlerConfig {
     }
 
     @Bean
-    public CrawlerContext crawlerContext(UuidProvider uuidProvider, CrawlerMessageService messageService) {
-        return new CrawlerContext(uuidProvider, messageService);
+    public CrawlerContext crawlerContext(UuidProvider uuidProvider) {
+        return new CrawlerContext(uuidProvider);
     }
 
     @Bean

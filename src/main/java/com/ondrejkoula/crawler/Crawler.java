@@ -1,6 +1,5 @@
 package com.ondrejkoula.crawler;
 
-import com.ondrejkoula.crawler.messages.CrawlerMessageService;
 import lombok.Getter;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -16,7 +15,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static com.ondrejkoula.crawler.CrawlerState.*;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static org.jsoup.Jsoup.connect;
 
@@ -25,7 +23,6 @@ public class Crawler implements Runnable {
     private final UUID uuid;
     @Getter
     private final CrawlerConfig config;
-    private final CrawlerMessageService messageService;
     private final CrawlerDataContainer dataContainer;
     private final LinksFilter linksFilter;
     private final CrawlerEventHandler eventHandler;
@@ -33,10 +30,11 @@ public class Crawler implements Runnable {
 
     @Getter
     private CrawlerState currentState;
-    @Getter
-    private String host;
 
-    Crawler(UUID uuid, CrawlerConfig crawlerConfig, CrawlerMessageService messageService, CrawlerEventHandler eventHandler) {
+    @Getter
+    private final String host;
+
+    Crawler(UUID uuid, CrawlerConfig crawlerConfig, CrawlerEventHandler eventHandler) {
         Set<URL> initialUrls = crawlerConfig.getInitialUrls() == null ? new HashSet<>() : crawlerConfig.getInitialUrls();
         if (initialUrls.isEmpty()) {
             throw new IllegalStateException("No initial URL specified.");
@@ -44,7 +42,6 @@ public class Crawler implements Runnable {
         validateUrlsHosts(initialUrls);
         this.uuid = uuid;
         this.config = crawlerConfig;
-        this.messageService = messageService;
         this.eventHandler = eventHandler;
         this.host = initialUrls.iterator().next().getHost();
         Set<URL> urlsToSkip = crawlerConfig.getUrlsToSkip() == null ? new HashSet<>() : crawlerConfig.getUrlsToSkip();
@@ -70,9 +67,9 @@ public class Crawler implements Runnable {
     }
 
     private void startCrawling() {
-        if (!NEW.equals(currentState)) {
-            messageService.crawlerWarning(uuid, "Crawler already started.");
-        }
+//        if (!NEW.equals(currentState)) {
+//             TODO log - "Crawler already started."
+//        }
         changeState(RUNNING);
 
         CrawlerURL initUrl = dataContainer.nextUrl();
@@ -121,12 +118,13 @@ public class Crawler implements Runnable {
             if (STOPPED.equals(currentState)) {
                 return false;
             }
+
             htmlDocument = connect(url.getUrl().toString())
                     .userAgent(config.getUserAgent())
                     .get();
         } catch (IOException e) {
             dataContainer.markAsFailed(url);
-            messageService.crawlerError(uuid, format("Cannot get HTML from %s", url.toString()), e);
+            // TODO log "Cannot get HTML from --"
             return false;
         } finally {
             lock.unlock();
@@ -160,7 +158,7 @@ public class Crawler implements Runnable {
                     dataContainer.addToQueueIfNotProcessed(outcomeLink);
                 }
             } catch (MalformedURLException e) {
-                messageService.crawlerError(uuid, format("Invalid link: %s. Skipping...", link));
+                // TODO "Invalid link: --. Skipping..."
             } finally {
                 lock.unlock();
             }
@@ -173,7 +171,7 @@ public class Crawler implements Runnable {
                     try {
                         return new URL(link);
                     } catch (MalformedURLException e) {
-                        messageService.crawlerError(uuid, format("Link process failed. Invalid URL: %s", link), e);
+                         // TODO "Link process failed. Invalid URL: --"
                         return null;
                     }
                 })
